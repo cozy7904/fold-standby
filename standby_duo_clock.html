@@ -2,795 +2,340 @@
 <html lang="ko">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <meta name="apple-mobile-web-app-capable" content="yes">
-    <meta name="mobile-web-app-capable" content="yes">
-    <meta name="theme-color" content="#000000">
-    <title>StandBy Duo Clock - Galaxy Fold</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800;900&family=Noto+Sans+KR:wght@500;700;900&display=swap" rel="stylesheet">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>StandBy Duo Clock</title>
     <style>
-        :root {
-            --accent-color: #FF9500;
-            --accent-red: #FF3B30;
-            --text-primary: #FFFFFF;
-            --text-secondary: #8E8E93;
-            --card-bg: #161618;
-            --card-bg-top: #1C1C1E;
-            --card-bg-bottom: #121214;
-            --card-border: rgba(255, 255, 255, 0.08);
-        }
-
-        /* 야간 레드 모드 (Night Mode) 변수 오버라이드 */
-        body.night-mode {
-            --accent-color: #FF2A1F;
-            --accent-red: #FF2A1F;
-            --text-primary: #FF2A1F;
-            --text-secondary: #6E110B;
-            --card-bg: #0D0202;
-            --card-bg-top: #120303;
-            --card-bg-bottom: #090101;
-            --card-border: rgba(255, 42, 31, 0.16);
-        }
-
         * {
             box-sizing: border-box;
-            user-select: none;
-            -webkit-user-select: none;
-            -webkit-touch-callout: none;
-        }
-
-        body, html {
             margin: 0;
             padding: 0;
+            user-select: none;
+        }
+        body, html {
             width: 100%;
             height: 100%;
             background-color: #000000;
-            color: var(--text-primary);
-            font-family: 'Inter', 'Noto Sans KR', -apple-system, BlinkMacSystemFont, sans-serif;
+            color: #ffffff;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
             overflow: hidden;
-            touch-action: manipulation;
+            display: flex;
+            justify-content: center;
+            align-items: center;
         }
 
-        /* 플렉스 모드 (갤럭시 폴드 반접기 거치 시 상단 50%에 배치) */
-        #app-wrapper {
-            width: 100vw;
-            height: 100vh;
+        /* 전체 컨테이너 (화면 중앙 정렬) */
+        .standby-container {
+            width: 100%;
+            height: 100%;
             display: flex;
+            flex-direction: row;
+            justify-content: space-around;
             align-items: center;
-            justify-content: center;
-            transition: height 0.45s cubic-bezier(0.22, 1, 0.36, 1), padding 0.45s ease, transform 1s ease;
+            padding: 40px;
             position: relative;
         }
 
-        body.flex-mode #app-wrapper {
-            height: 50vh;
-            border-bottom: 1px dashed rgba(255, 255, 255, 0.12);
-        }
-
-        body.night-mode.flex-mode #app-wrapper {
-            border-bottom: 1px dashed rgba(255, 42, 31, 0.2);
-        }
-
-        /* 플립 시계 카드 디자인 */
-        .flip-card {
-            position: relative;
-            background: linear-gradient(180deg, var(--card-bg-top) 0%, var(--card-bg-top) 49.5%, #000000 49.5%, #000000 50.5%, var(--card-bg-bottom) 50.5%, var(--card-bg-bottom) 100%);
-            border-radius: 1.75rem;
-            border: 1px solid var(--card-border);
-            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.9), inset 0 1px 1px rgba(255, 255, 255, 0.08);
+        /* 상단 조작 버튼 영역 */
+        .controls {
+            position: absolute;
+            top: 20px;
+            left: 50px;
             display: flex;
+            gap: 15px;
+            z-index: 1000;
+        }
+        .btn {
+            background: rgba(255, 255, 255, 0.15);
+            border: none;
+            color: #fff;
+            padding: 10px 18px;
+            border-radius: 20px;
+            font-size: 14px;
+            cursor: pointer;
+            backdrop-filter: blur(10px);
+        }
+        .btn:active {
+            background: rgba(255, 255, 255, 0.3);
+        }
+
+        /* 모드 1: 아날로그 + 달력 듀오 스타일 */
+        .duo-panel {
+            display: flex;
+            width: 100%;
+            height: 100%;
+            justify-content: space-around;
+            align-items: center;
+        }
+
+        .analog-box {
+            display: flex;
+            flex-direction: column;
             align-items: center;
             justify-content: center;
-            overflow: hidden;
-            transition: background 0.3s ease, border-color 0.3s ease;
         }
 
-        /* 플립 시계 중앙 절취선 및 힌지 디테일 */
-        .flip-card::after {
-            content: '';
+        /* 아날로그 시계 판 */
+        .clock-face {
+            width: 280px;
+            height: 280px;
+            border: 4px solid #333;
+            border-radius: 50%;
+            position: relative;
+            background: radial-gradient(circle, #111 0%, #000 100%);
+            box-shadow: 0 0 30px rgba(0,0,0,0.8);
+        }
+        .hand {
             position: absolute;
-            top: 50%;
-            left: 0;
-            right: 0;
-            height: 3px;
-            background-color: #000000;
-            transform: translateY(-50%);
-            z-index: 10;
-            box-shadow: 0 1px 2px rgba(255, 255, 255, 0.05);
+            bottom: 50%;
+            left: 50%;
+            transform-origin: bottom;
+            border-radius: 4px;
+        }
+        .hour-hand { width: 6px; height: 75px; background: #fff; margin-left: -3px; }
+        .minute-hand { width: 4px; height: 105px; background: #fff; margin-left: -2px; }
+        .second-hand { width: 2px; height: 120px; background: #ff9f0a; margin-left: -1px; }
+        .center-dot {
+            width: 12px; height: 12px; background: #ff9f0a; border-radius: 50%;
+            position: absolute; top: 50%; left: 50%; transform: translate(-6px, -6px);
+        }
+        .clock-num {
+            position: absolute; width: 100%; height: 100%; text-align: center;
+            font-size: 20px; font-weight: bold; color: #888; padding: 10px;
         }
 
-        .flip-hinge-left, .flip-hinge-right {
-            position: absolute;
-            top: 50%;
-            width: 8px;
-            height: 22px;
-            background: #09090B;
-            border: 1px solid var(--card-border);
-            transform: translateY(-50%);
-            z-index: 15;
-            border-radius: 3px;
+        /* 오른쪽 달력 박스 */
+        .calendar-box {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 24px;
+            padding: 30px;
+            width: 340px;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
         }
-        .flip-hinge-left { left: 4px; }
-        .flip-hinge-right { right: 4px; }
-
-        /* 플립 애니메이션 효과 */
-        @keyframes flipPulse {
-            0% { transform: perspective(600px) rotateX(0deg); }
-            35% { transform: perspective(600px) rotateX(-14deg) scale(0.985); filter: brightness(0.85); }
-            100% { transform: perspective(600px) rotateX(0deg) scale(1); filter: brightness(1); }
+        .cal-header {
+            font-size: 28px;
+            font-weight: bold;
+            color: #ff453a;
+            margin-bottom: 5px;
         }
-
-        .flip-animate {
-            animation: flipPulse 0.45s cubic-bezier(0.25, 1, 0.5, 1);
+        .cal-sub {
+            font-size: 16px;
+            color: #aaa;
+            margin-bottom: 20px;
         }
-
-        /* 플립 숫자 타이포그래피 */
-        .flip-number {
-            font-variant-numeric: tabular-nums;
-            letter-spacing: -0.05em;
-            line-height: 0.88;
-            font-weight: 900;
-            color: var(--text-primary);
-            text-shadow: 0 4px 16px rgba(0, 0, 0, 0.6);
-            transition: color 0.3s ease;
-        }
-
-        /* 컨트롤 바 숨김 트랜지션 */
-        .ui-overlay {
-            transition: opacity 0.4s ease, transform 0.4s ease;
-        }
-        .ui-hidden {
-            opacity: 0 !important;
-            pointer-events: none !important;
-            transform: translateY(-8px);
-        }
-        .ui-hidden-bottom {
-            opacity: 0 !important;
-            pointer-events: none !important;
-            transform: translateY(8px);
-        }
-
-        /* 아날로그 시계 부드러운 그림자 */
-        .clock-hand-shadow {
-            filter: drop-shadow(0px 3px 5px rgba(0, 0, 0, 0.75));
-        }
-
-        /* 달력 그리드 */
-        .calendar-grid {
+        .cal-grid {
             display: grid;
-            grid-template-columns: repeat(7, minmax(0, 1fr));
+            grid-template-columns: repeat(7, 1fr);
+            gap: 8px;
             text-align: center;
+            font-size: 14px;
+        }
+        .cal-day-name { color: #666; font-weight: bold; padding-bottom: 8px; }
+        .cal-date { padding: 8px 0; color: #ddd; }
+        .cal-date.today {
+            background: #ff453a;
+            color: #fff;
+            border-radius: 50%;
+            font-weight: bold;
+        }
+        .cal-date.sun { color: #ff453a; }
+
+        /* 모드 2: 대형 플립 시계 스타일 */
+        .flip-panel {
+            display: none;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            width: 100%;
+            height: 100%;
+        }
+        .flip-time-container {
+            font-size: 90px;
+            font-weight: 900;
+            letter-spacing: 4px;
+            color: #ffffff;
+            font-family: monospace;
+        }
+        .flip-date-text {
+            font-size: 24px;
+            color: #ff9f0a;
+            margin-top: 20px;
         }
 
-        /* 야간 모드 전환 부드럽게 */
-        svg text, svg line, svg circle, svg rect, div, span {
-            transition: color 0.3s ease, stroke 0.3s ease, fill 0.3s ease, background-color 0.3s ease;
+        /* 야간 모드 (레드 테마) */
+        body.night-mode {
+            background-color: #000000 !important;
+        }
+        body.night-mode .calendar-box {
+            background: rgba(50, 0, 0, 0.2);
+            border-color: rgba(255, 0, 0, 0.2);
+        }
+        body.night-mode .clock-face {
+            border-color: #400;
+            background: radial-gradient(circle, #200 0%, #000 100%);
+        }
+        body.night-mode .hand.second-hand,
+        body.night-mode .center-dot,
+        body.night-mode .cal-header,
+        body.night-mode .flip-date-text {
+            color: #ff3b30 !important;
+            background-color: #ff3b30;
+        }
+        body.night-mode .cal-date.today {
+            background: #ff3b30 !important;
+        }
+        body.night-mode * {
+            color: #ff6961 !important;
+        }
+        body.night-mode .cal-date.today {
+            color: #000 !important;
         }
     </style>
 </head>
-<body class="select-none">
+<body>
 
-    <!-- 상단 플로팅 컨트롤 바 (화면 터치 시 표시, 3.5초 후 자동 숨김) -->
-    <header id="top-controls" class="ui-overlay fixed top-4 left-0 right-0 z-50 flex justify-center px-4">
-        <div class="flex flex-wrap items-center justify-center gap-1.5 sm:gap-2 bg-zinc-900/85 backdrop-blur-xl border border-white/10 px-3 py-2 rounded-full shadow-2xl">
-            
-            <!-- 모드 1: 아날로그 + 달력 -->
-            <button id="btn-mode-duo" onclick="setClockMode('duo', event)" class="px-3.5 py-1.5 rounded-full text-xs sm:text-sm font-bold flex items-center gap-1.5 bg-white text-black transition">
-                <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24">
-                    <circle cx="12" cy="12" r="9"></circle>
-                    <path stroke-linecap="round" d="M12 7v5l3 3"></path>
-                </svg>
-                <span>아날로그+달력</span>
-            </button>
+    <div class="controls">
+        <button class="btn" onclick="switchMode('duo')">아날로그+달력</button>
+        <button class="btn" onclick="switchMode('flip')">플립 시계</button>
+        <button class="btn" onclick="toggleNightMode()">야간 모드</button>
+    </div>
 
-            <!-- 모드 2: 플립 시계 -->
-            <button id="btn-mode-flip" onclick="setClockMode('flip', event)" class="px-3.5 py-1.5 rounded-full text-xs sm:text-sm font-bold flex items-center gap-1.5 text-zinc-300 hover:text-white transition">
-                <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24">
-                    <rect x="3" y="4" width="8" height="16" rx="2"></rect>
-                    <rect x="13" y="4" width="8" height="16" rx="2"></rect>
-                    <line x1="3" y1="12" x2="11" y2="12"></line>
-                    <line x1="13" y1="12" x2="21" y2="12"></line>
-                </svg>
-                <span>플립 시계</span>
-            </button>
+    <div class="standby-container">
+        <!-- 1. 아날로그 + 달력 듀오 모드 -->
+        <div id="duoPanel" class="duo-panel">
+            <div class="analog-box">
+                <div class="clock-face" id="clockFace">
+                    <!-- 시계 숫자 배치 -->
+                    <div class="clock-num" style="transform: rotate(30deg);"><span style="display:inline-block; transform: rotate(-30deg);">1</span></div>
+                    <div class="clock-num" style="transform: rotate(60deg);"><span style="display:inline-block; transform: rotate(-60deg);">2</span></div>
+                    <div class="clock-num" style="transform: rotate(90deg);"><span style="display:inline-block; transform: rotate(-90deg);">3</span></div>
+                    <div class="clock-num" style="transform: rotate(120deg);"><span style="display:inline-block; transform: rotate(-120deg);">4</span></div>
+                    <div class="clock-num" style="transform: rotate(150deg);"><span style="display:inline-block; transform: rotate(-150deg);">5</span></div>
+                    <div class="clock-num" style="transform: rotate(180deg);"><span style="display:inline-block; transform: rotate(-180deg);">6</span></div>
+                    <div class="clock-num" style="transform: rotate(210deg);"><span style="display:inline-block; transform: rotate(-210deg);">7</span></div>
+                    <div class="clock-num" style="transform: rotate(240deg);"><span style="display:inline-block; transform: rotate(-240deg);">8</span></div>
+                    <div class="clock-num" style="transform: rotate(270deg);"><span style="display:inline-block; transform: rotate(-270deg);">9</span></div>
+                    <div class="clock-num" style="transform: rotate(300deg);"><span style="display:inline-block; transform: rotate(-300deg);">10</span></div>
+                    <div class="clock-num" style="transform: rotate(330deg);"><span style="display:inline-block; transform: rotate(-330deg);">11</span></div>
+                    <div class="clock-num" style="transform: rotate(360deg);"><span style="display:inline-block; transform: rotate(-360deg);">12</span></div>
+                    
+                    <div class="hand hour-hand" id="hourHand"></div>
+                    <div class="hand minute-hand" id="minuteHand"></div>
+                    <div class="hand second-hand" id="secondHand"></div>
+                    <div class="center-dot"></div>
+                </div>
+            </div>
 
-            <div class="h-4 w-[1px] bg-white/15 mx-0.5"></div>
-
-            <!-- 야간 레드 모드 토글 -->
-            <button id="btn-night" onclick="toggleNightMode(event)" class="px-3 py-1.5 rounded-full text-xs sm:text-sm font-semibold flex items-center gap-1.5 text-zinc-300 hover:text-white transition" title="침실용 야간 레드 모드">
-                <span class="w-2.5 h-2.5 rounded-full bg-red-500 inline-block"></span>
-                <span>야간 모드</span>
-            </button>
-
-            <!-- 폴드 반접기(플렉스 모드) 토글 -->
-            <button id="btn-flex" onclick="toggleFlexMode(event)" class="px-3 py-1.5 rounded-full text-xs sm:text-sm font-semibold flex items-center gap-1.5 text-zinc-300 hover:text-white transition" title="폴드를 반으로 접어 거치할 때 상단 화면에 맞춤">
-                <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" d="M4 6h16M4 12h16m-7 6h7"></path>
-                </svg>
-                <span>폴드 반접기</span>
-            </button>
-
-            <!-- 12/24시간제 토글 -->
-            <button id="btn-24h" onclick="toggle24Hour(event)" class="px-2.5 py-1.5 rounded-full text-xs sm:text-sm font-semibold text-zinc-300 hover:text-white transition">
-                12H
-            </button>
-
-            <!-- 전체화면 버튼 -->
-            <button id="btn-fullscreen" onclick="toggleFullScreen(event)" class="p-1.5 rounded-full text-zinc-300 hover:text-white transition" title="전체화면 전환">
-                <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5l-5-5m5 5v-4m0 4h-4"></path>
-                </svg>
-            </button>
-
-            <!-- 설치/사용 가이드 모달 버튼 -->
-            <button onclick="openGuideModal(event)" class="p-1.5 rounded-full text-zinc-400 hover:text-white transition" title="갤럭시 폴드 설정 팁">
-                <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24">
-                    <circle cx="12" cy="12" r="9"></circle>
-                    <path stroke-linecap="round" d="M12 16v-4m0-4h.01"></path>
-                </svg>
-            </button>
+            <div class="calendar-box">
+                <div class="cal-header" id="calMonth">10월</div>
+                <div class="cal-sub" id="calYearSub">2026년</div>
+                <div class="cal-grid" id="calGrid">
+                    <!-- 요일 헤더 -->
+                    <div class="cal-day-name sun">일</div>
+                    <div class="cal-day-name">월</div>
+                    <div class="cal-day-name">화</div>
+                    <div class="cal-day-name">수</div>
+                    <div class="cal-day-name">목</div>
+                    <div class="cal-day-name">금</div>
+                    <div class="cal-day-name">토</div>
+                    <!-- 날짜 그리드는 자바스크립트로 동적 생성 -->
+                </div>
+            </div>
         </div>
-    </header>
 
-    <!-- 메인 탁상시계 래퍼 (번인 방지 픽셀 시프트 적용 영역) -->
-    <main id="app-wrapper" class="px-4 sm:px-8 md:px-12">
-
-        <!-- =====================================================
-             모드 1: 아이폰 스탠바이 듀오 (아날로그 시계 + 달력)
-             ===================================================== -->
-        <section id="view-duo" class="w-full max-w-6xl h-full max-h-[88vh] flex flex-row items-center justify-center gap-4 sm:gap-10 md:gap-16">
-            
-            <!-- 왼쪽: iOS 스탠바이 아날로그 시계 -->
-            <div class="flex-1 h-full flex items-center justify-center max-w-[46vw] sm:max-w-[44%]">
-                <div class="w-full aspect-square max-h-[76vh] flex items-center justify-center relative">
-                    <svg id="analog-svg" viewBox="0 0 300 300" class="w-full h-full overflow-visible">
-                        <!-- 눈금(Tick Marks) 및 숫자 그룹: JS에서 자동 생성 -->
-                        <g id="analog-ticks"></g>
-                        <g id="analog-numbers"></g>
-
-                        <!-- 다이얼 내부 요일/일 표시 (3시 방향 안쪽, iOS 스탠바이 특유의 디테일) -->
-                        <g transform="translate(192, 150)">
-                            <text id="analog-day-date" x="0" y="5" text-anchor="middle" fill="var(--text-secondary)" font-size="14" font-weight="700" letter-spacing="0.5">수 28</text>
-                        </g>
-
-                        <!-- 시침 (Hour Hand) -->
-                        <g id="hour-hand" class="clock-hand-shadow" transform="rotate(0 150 150)">
-                            <!-- 중심에서 바깥으로 뻗는 기둥 + 둥근 캡슐형 시침 -->
-                            <line x1="150" y1="150" x2="150" y2="122" stroke="var(--text-primary)" stroke-width="4.5" stroke-linecap="round" />
-                            <rect x="143.5" y="72" width="13" height="54" rx="6.5" fill="var(--text-primary)" />
-                        </g>
-
-                        <!-- 분침 (Minute Hand) -->
-                        <g id="minute-hand" class="clock-hand-shadow" transform="rotate(0 150 150)">
-                            <line x1="150" y1="150" x2="150" y2="118" stroke="var(--text-primary)" stroke-width="4" stroke-linecap="round" />
-                            <rect x="145" y="34" width="10" height="88" rx="5" fill="var(--text-primary)" />
-                        </g>
-
-                        <!-- 초침 (Second Hand - 부드럽게 회전하는 오렌지 바늘) -->
-                        <g id="second-hand" class="clock-hand-shadow" transform="rotate(0 150 150)">
-                            <line x1="150" y1="176" x2="150" y2="24" stroke="var(--accent-color)" stroke-width="2.6" stroke-linecap="round" />
-                            <!-- 중심 캡 -->
-                            <circle cx="150" cy="150" r="6.5" fill="var(--accent-color)" />
-                            <circle cx="150" cy="150" r="2.5" fill="#000000" />
-                        </g>
-                    </svg>
-                </div>
-            </div>
-
-            <!-- 오른쪽: 스탠바이 달력 위젯 -->
-            <div class="flex-1 h-full flex items-center justify-center max-w-[48vw] sm:max-w-[46%]">
-                <div class="w-full max-w-md flex flex-col justify-center">
-                    <!-- 현재 월 표시 헤더 -->
-                    <div class="flex items-baseline justify-between mb-2 sm:mb-4 px-2">
-                        <h2 id="cal-month-title" class="text-2xl sm:text-4xl md:text-5xl font-extrabold tracking-tight" style="color: var(--accent-red);">
-                            10월
-                        </h2>
-                        <span id="cal-year-subtitle" class="text-xs sm:text-base font-bold opacity-60" style="color: var(--text-secondary);">
-                            2026년
-                        </span>
-                    </div>
-
-                    <!-- 요일 헤더 (일~토) -->
-                    <div class="calendar-grid mb-1 sm:mb-2 pb-1 border-b border-white/10">
-                        <div class="text-xs sm:text-sm md:text-base font-bold py-1 opacity-60" style="color: var(--accent-red);">일</div>
-                        <div class="text-xs sm:text-sm md:text-base font-bold py-1" style="color: var(--text-secondary);">월</div>
-                        <div class="text-xs sm:text-sm md:text-base font-bold py-1" style="color: var(--text-secondary);">화</div>
-                        <div class="text-xs sm:text-sm md:text-base font-bold py-1" style="color: var(--text-secondary);">수</div>
-                        <div class="text-xs sm:text-sm md:text-base font-bold py-1" style="color: var(--text-secondary);">목</div>
-                        <div class="text-xs sm:text-sm md:text-base font-bold py-1" style="color: var(--text-secondary);">금</div>
-                        <div class="text-xs sm:text-sm md:text-base font-bold py-1 opacity-75" style="color: var(--text-secondary);">토</div>
-                    </div>
-
-                    <!-- 날짜 그리드 -->
-                    <div id="cal-days-grid" class="calendar-grid gap-y-1 sm:gap-y-2">
-                        <!-- JS에서 동적으로 채움 -->
-                    </div>
-                </div>
-            </div>
-
-        </section>
-
-        <!-- =====================================================
-             모드 2: 플립 시계 (Retro Split-Flap Desk Clock)
-             ===================================================== -->
-        <section id="view-flip" class="hidden w-full max-w-6xl h-full max-h-[86vh] flex-col items-center justify-center gap-3 sm:gap-5">
-            
-            <!-- 상단 날짜 및 요일 바 -->
-            <div class="flex items-center justify-between w-full max-w-4xl px-2">
-                <div class="flex items-center gap-2.5">
-                    <span class="w-2.5 h-2.5 rounded-full" style="background-color: var(--accent-color);"></span>
-                    <span id="flip-date-text" class="text-sm sm:text-xl md:text-2xl font-bold tracking-tight" style="color: var(--text-primary);">
-                        10월 28일 수요일
-                    </span>
-                </div>
-                <div id="flip-seconds-pill" class="px-3 py-0.5 rounded-full text-xs sm:text-base font-extrabold tabular-nums border" style="border-color: var(--card-border); background-color: var(--card-bg); color: var(--accent-color);">
-                    00초
-                </div>
-            </div>
-
-            <!-- 중앙 대형 플립 카드 듀오 (시 / 분) -->
-            <div class="w-full max-w-4xl flex-1 max-h-[64vh] flex flex-row items-center justify-center gap-3 sm:gap-6 md:gap-8">
-                
-                <!-- 시간 (Hours) 플립 카드 -->
-                <div id="flip-card-hour" class="flip-card flex-1 h-full max-h-[58vh] relative">
-                    <div class="flip-hinge-left"></div>
-                    <div class="flip-hinge-right"></div>
-                    <!-- 오전/오후 뱃지 -->
-                    <span id="flip-ampm-badge" class="absolute top-3.5 left-4 sm:top-5 sm:left-6 text-xs sm:text-lg md:text-xl font-extrabold tracking-wider uppercase z-20" style="color: var(--text-secondary);">
-                        AM
-                    </span>
-                    <span id="flip-hour-val" class="flip-number text-[24vw] sm:text-[22vw] md:text-[13.5rem] lg:text-[16rem] select-none">
-                        09
-                    </span>
-                </div>
-
-                <!-- 분 (Minutes) 플립 카드 -->
-                <div id="flip-card-min" class="flip-card flex-1 h-full max-h-[58vh] relative">
-                    <div class="flip-hinge-left"></div>
-                    <div class="flip-hinge-right"></div>
-                    <!-- 하단 스탠바이 포인트 도트 -->
-                    <span class="absolute bottom-3.5 right-4 sm:bottom-5 sm:right-6 text-[10px] sm:text-xs font-bold uppercase tracking-widest opacity-40 z-20">
-                        STANDBY
-                    </span>
-                    <span id="flip-min-val" class="flip-number text-[24vw] sm:text-[22vw] md:text-[13.5rem] lg:text-[16rem] select-none">
-                        30
-                    </span>
-                </div>
-
-            </div>
-        </section>
-
-    </main>
-
-    <!-- 하단 상태 표시줄 (Wake Lock 상태 & 스와이프 힌트, 3.5초 후 자동 숨김) -->
-    <footer id="bottom-status" class="ui-overlay fixed bottom-3 left-0 right-0 z-40 flex justify-center pointer-events-none">
-        <div class="flex items-center gap-3 px-3.5 py-1 rounded-full bg-zinc-900/70 backdrop-blur-md border border-white/5 text-[11px] sm:text-xs text-zinc-400">
-            <span id="wakelock-indicator" class="flex items-center gap-1.5">
-                <span id="wakelock-dot" class="w-2 h-2 rounded-full bg-emerald-400"></span>
-                <span id="wakelock-text">화면 켜짐 유지 중</span>
-            </span>
-            <span>·</span>
-            <span>좌우 스와이프로 시계 전환</span>
-        </div>
-    </footer>
-
-    <!-- 갤럭시 폴드 홈 화면 추가 & 사용 가이드 모달 -->
-    <div id="guide-modal" class="fixed inset-0 z-50 hidden items-center justify-center bg-black/80 backdrop-blur-md p-4" onclick="closeGuideModal(event)">
-        <div class="bg-zinc-900 border border-white/15 rounded-3xl max-w-md w-full p-6 text-white shadow-2xl" onclick="event.stopPropagation()">
-            <div class="flex items-center justify-between mb-4">
-                <h3 class="text-lg font-extrabold flex items-center gap-2">
-                    <span class="w-2.5 h-2.5 rounded-full bg-orange-500"></span>
-                    갤럭시 Z 폴드8 탁상시계 활용 팁
-                </h3>
-                <button onclick="closeGuideModal(event)" class="text-zinc-400 hover:text-white p-1">✕</button>
-            </div>
-            <ol class="space-y-3 text-xs sm:text-sm text-zinc-300 leading-relaxed list-decimal list-inside">
-                <li>
-                    <strong class="text-white">진짜 앱처럼 전체화면 설치하기:</strong><br>
-                    이 코드를 <code class="text-orange-400">clock.html</code>로 저장한 뒤 크롬/삼성 인터넷으로 열고 메뉴(⋮)에서 <strong>[홈 화면에 추가]</strong>를 누르면 상단 주소창 없이 순정 앱처럼 실행됩니다.
-                </li>
-                <li>
-                    <strong class="text-white">폴드 반접기(플렉스 모드) 거치:</strong><br>
-                    폴드를 살짝 접어 텐트나 노트북 모양으로 책상에 세워둘 때는 상단 메뉴의 <strong>[폴드 반접기]</strong> 버튼을 눌러보세요. 상단 절반 화면에 시계가 딱 맞게 올라갑니다.
-                </li>
-                <li>
-                    <strong class="text-white">조작 방법:</strong><br>
-                    화면을 한 번 터치하면 메뉴가 나타나고 3초 뒤 사라집니다. 화면을 <strong>좌우로 스와이프</strong>하면 [아날로그+달력]과 [플립 시계]가 바로 전환됩니다.
-                </li>
-            </ol>
-            <button onclick="closeGuideModal(event)" class="mt-5 w-full py-2.5 rounded-xl bg-orange-500 hover:bg-orange-600 text-black font-bold text-sm transition">
-                확인했어요
-            </button>
+        <!-- 2. 플립 시계 모드 -->
+        <div id="flipPanel" class="flip-panel">
+            <div class="flip-time-container" id="flipTimeText">00:00:00</div>
+            <div class="flip-date-text" id="flipDateText">2026년 10월 28일 수요일</div>
         </div>
     </div>
 
     <script>
-        // --- 앱 상태 관리 ---
-        let currentMode = 'duo'; // 'duo' (아날로그+달력) | 'flip' (플립 시계)
-        let isNightMode = false;
-        let isFlexMode = false;
-        let is24Hour = false;
-        let hideControlsTimeout = null;
-        let wakeLockSentinel = null;
-
-        let lastFlipHour = '';
-        let lastFlipMin = '';
-        let lastRenderedDateKey = '';
-
-        // --- 1. 아날로그 시계 다이얼 눈금 & 숫자 생성 (iOS StandBy 스타일) ---
-        function buildAnalogClockFace() {
-            const ticksGroup = document.getElementById('analog-ticks');
-            const numbersGroup = document.getElementById('analog-numbers');
-            ticksGroup.innerHTML = '';
-            numbersGroup.innerHTML = '';
-
-            const cx = 150;
-            const cy = 150;
-            const outerRadius = 142;
-
-            // 60개 눈금 생성
-            for (let i = 0; i < 60; i++) {
-                const angleDeg = i * 6;
-                const isMajor = i % 5 === 0;
-                const tickLength = isMajor ? 11 : 6;
-                const tickWidth = isMajor ? 2.8 : 1.4;
-                const opacity = isMajor ? '1' : '0.38';
-
-                const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
-                line.setAttribute('x1', cx);
-                line.setAttribute('y1', cy - outerRadius);
-                line.setAttribute('x2', cx);
-                line.setAttribute('y2', cy - outerRadius + tickLength);
-                line.setAttribute('stroke', 'var(--text-primary)');
-                line.setAttribute('stroke-width', tickWidth);
-                line.setAttribute('stroke-linecap', 'round');
-                line.setAttribute('opacity', opacity);
-                line.setAttribute('transform', `rotate(${angleDeg} ${cx} ${cy})`);
-                ticksGroup.appendChild(line);
-            }
-
-            // 1~12 숫자 생성
-            const numberRadius = 109;
-            for (let num = 1; num <= 12; num++) {
-                const angleRad = ((num * 30 - 90) * Math.PI) / 180;
-                const x = cx + numberRadius * Math.cos(angleRad);
-                const y = cy + numberRadius * Math.sin(angleRad);
-
-                const text = document.createElementNS('http://www.w3.org/2000/svg', 'text');
-                text.setAttribute('x', x);
-                text.setAttribute('y', y);
-                text.setAttribute('text-anchor', 'middle');
-                text.setAttribute('dominant-baseline', 'central');
-                text.setAttribute('fill', 'var(--text-primary)');
-                text.setAttribute('font-size', '24');
-                text.setAttribute('font-weight', '800');
-                text.textContent = num;
-                numbersGroup.appendChild(text);
-            }
-        }
-
-        // --- 2. 달력 위젯 렌더링 ---
-        function renderCalendar(now) {
-            const year = now.getFullYear();
-            const month = now.getMonth(); // 0 ~ 11
-            const today = now.getDate();
-
-            const dateKey = `${year}-${month}-${today}`;
-            if (dateKey === lastRenderedDateKey) return;
-            lastRenderedDateKey = dateKey;
-
-            document.getElementById('cal-month-title').textContent = `${month + 1}월`;
-            document.getElementById('cal-year-subtitle').textContent = `${year}년`;
-
-            const firstDayOfWeek = new Date(year, month, 1).getDay(); // 0(일) ~ 6(토)
-            const daysInMonth = new Date(year, month + 1, 0).getDate();
-
-            const grid = document.getElementById('cal-days-grid');
-            grid.innerHTML = '';
-
-            // 빈 칸 채우기
-            for (let i = 0; i < firstDayOfWeek; i++) {
-                const emptyCell = document.createElement('div');
-                emptyCell.className = 'aspect-square';
-                grid.appendChild(emptyCell);
-            }
-
-            // 1일부터 말일까지 생성
-            for (let day = 1; day <= daysInMonth; day++) {
-                const cell = document.createElement('div');
-                cell.className = 'flex items-center justify-center py-0.5 sm:py-1';
-
-                const badge = document.createElement('span');
-                const isToday = day === today;
-                const dayOfWeek = (firstDayOfWeek + day - 1) % 7;
-
-                if (isToday) {
-                    badge.className = 'w-7 h-7 sm:w-9 sm:h-9 md:w-10 md:h-10 rounded-full flex items-center justify-center text-xs sm:text-base md:text-lg font-black shadow-lg';
-                    badge.style.backgroundColor = 'var(--accent-red)';
-                    badge.style.color = '#000000';
-                } else {
-                    badge.className = 'w-7 h-7 sm:w-9 sm:h-9 md:w-10 md:h-10 rounded-full flex items-center justify-center text-xs sm:text-base md:text-lg font-bold';
-                    if (dayOfWeek === 0) {
-                        badge.style.color = 'var(--accent-red)';
-                        badge.style.opacity = '0.85';
-                    } else {
-                        badge.style.color = 'var(--text-primary)';
-                    }
-                }
-
-                badge.textContent = day;
-                cell.appendChild(badge);
-                grid.appendChild(cell);
-            }
-        }
-
-        // --- 3. 실시간 시계 루프 (60fps 부드러운 초침 & 플립 업데이트) ---
         function updateClock() {
             const now = new Date();
-            const hours24 = now.getHours();
+            const hours = now.getHours();
             const minutes = now.getMinutes();
             const seconds = now.getSeconds();
-            const millis = now.getMilliseconds();
 
-            const daysKorShort = ['일', '월', '화', '수', '목', '금', '토'];
-            const daysKorFull = ['일요일', '월요일', '화요일', '수요일', '목요일', '금요일', '토요일'];
-            const dayNameShort = daysKorShort[now.getDay()];
-            const dayNameFull = daysKorFull[now.getDay()];
-            const dateNum = now.getDate();
-            const monthNum = now.getMonth() + 1;
+            // 아날로그 시계 바늘 회전 각도 계산
+            const hourDeg = (hours % 12) * 30 + minutes * 0.5;
+            const minDeg = minutes * 6.5;
+            const secDeg = seconds * 6;
 
-            // 1) 아날로그 시계 바늘 각도 계산 (초침은 밀리초까지 반영하여 스윕 무브먼트 구현)
-            const exactSeconds = seconds + millis / 1000;
-            const exactMinutes = minutes + exactSeconds / 60;
-            const exactHours = (hours24 % 12) + exactMinutes / 60;
+            document.getElementById('hourHand').style.transform = `rotate(${hourDeg}deg)`;
+            document.getElementById('minuteHand').style.transform = `rotate(${minDeg}deg)`;
+            document.getElementById('secondHand').style.transform = `rotate(${secDeg}deg)`;
 
-            const secondAngle = exactSeconds * 6;
-            const minuteAngle = exactMinutes * 6;
-            const hourAngle = exactHours * 30;
+            // 플립 시계 텍스트 업데이트
+            const hStr = String(hours).padStart(2, '0');
+            const mStr = String(minutes).padStart(2, '0');
+            const sStr = String(seconds).padStart(2, '0');
+            document.getElementById('flipTimeText').innerText = `${hStr}:${mStr}:${sStr}`;
 
-            document.getElementById('second-hand').setAttribute('transform', `rotate(${secondAngle} 150 150)`);
-            document.getElementById('minute-hand').setAttribute('transform', `rotate(${minuteAngle} 150 150)`);
-            document.getElementById('hour-hand').setAttribute('transform', `rotate(${hourAngle} 150 150)`);
-            document.getElementById('analog-day-date').textContent = `${dayNameShort} ${dateNum}`;
+            // 날짜 텍스트 업데이트
+            const year = now.getFullYear();
+            const month = now.getMonth() + 1;
+            const date = now.getDate();
+            const days = ['일', '월', '화', '수', '목', '금', '토'];
+            const dayStr = days[now.getDay()];
 
-            // 2) 달력 업데이트 (자정 넘어가면 자동 갱신)
-            renderCalendar(now);
-
-            // 3) 플립 시계 업데이트
-            let displayHour = hours24;
-            const ampm = hours24 >= 12 ? 'PM' : 'AM';
-            const ampmBadge = document.getElementById('flip-ampm-badge');
-
-            if (!is24Hour) {
-                displayHour = hours24 % 12;
-                if (displayHour === 0) displayHour = 12;
-                ampmBadge.textContent = ampm;
-                ampmBadge.style.display = 'block';
-            } else {
-                ampmBadge.style.display = 'none';
-            }
-
-            const hourStr = String(displayHour).padStart(2, '0');
-            const minStr = String(minutes).padStart(2, '0');
-            const secStr = String(seconds).padStart(2, '0');
-
-            if (hourStr !== lastFlipHour) {
-                const hourEl = document.getElementById('flip-hour-val');
-                const cardHour = document.getElementById('flip-card-hour');
-                hourEl.textContent = hourStr;
-                triggerFlipAnimation(cardHour);
-                lastFlipHour = hourStr;
-            }
-
-            if (minStr !== lastFlipMin) {
-                const minEl = document.getElementById('flip-min-val');
-                const cardMin = document.getElementById('flip-card-min');
-                minEl.textContent = minStr;
-                triggerFlipAnimation(cardMin);
-                lastFlipMin = minStr;
-            }
-
-            document.getElementById('flip-date-text').textContent = `${monthNum}월 ${dateNum}일 ${dayNameFull}`;
-            document.getElementById('flip-seconds-pill').textContent = `${secStr}초`;
-
-            requestAnimationFrame(updateClock);
+            document.getElementById('calMonth').innerText = `${month}월`;
+            document.getElementById('calYearSub').innerText = `${year}년`;
+            document.getElementById('flipDateText').innerText = `${year}년 ${month}월 ${date}일 ${dayStr요일 = dayStr}요일`;
         }
 
-        function triggerFlipAnimation(cardElement) {
-            cardElement.classList.remove('flip-animate');
-            void cardElement.offsetWidth; // 리플로우 강제
-            cardElement.classList.add('flip-animate');
+        // 달력 자동 생성 함수
+        function generateCalendar() {
+            const now = new Date();
+            const year = now.getFullYear();
+            const month = now.getMonth();
+            const todayDate = now.getDate();
+
+            const firstDayIndex = new Date(year, month, 1).getDay();
+            const totalDays = new Date(year, month + 1, 0).getDate();
+
+            let gridHtml = `
+                <div class="cal-day-name sun">일</div>
+                <div class="cal-day-name">월</div>
+                <div class="cal-day-name">화</div>
+                <div class="cal-day-name">수</div>
+                <div class="cal-day-name">목</div>
+                <div class="cal-day-name">금</div>
+                <div class="cal-day-name">토</div>
+            `;
+
+            for (let i = 0; i < firstDayIndex; i++) {
+                gridHtml += `<div></div>`;
+            }
+
+            for (let d = 1; d <= totalDays; d++) {
+                let isToday = (d === todayDate) ? 'today' : '';
+                let isSun = (new Date(year, month, d).getDay() === 0) ? 'sun' : '';
+                gridHtml += `<div class="cal-date ${isToday} ${isSun}">${d}</div>`;
+            }
+
+            document.getElementById('calGrid').innerHTML = gridHtml;
         }
 
-        // --- 4. 모드 및 기능 컨트롤러 ---
-        function setClockMode(mode, event) {
-            if (event) event.stopPropagation();
-            currentMode = mode;
-
-            const viewDuo = document.getElementById('view-duo');
-            const viewFlip = document.getElementById('view-flip');
-            const btnDuo = document.getElementById('btn-mode-duo');
-            const btnFlip = document.getElementById('btn-mode-flip');
-
+        // 모드 전환 함수
+        function switchMode(mode) {
             if (mode === 'duo') {
-                viewDuo.classList.remove('hidden');
-                viewDuo.classList.add('flex');
-                viewFlip.classList.add('hidden');
-                viewFlip.classList.remove('flex');
-
-                btnDuo.className = 'px-3.5 py-1.5 rounded-full text-xs sm:text-sm font-bold flex items-center gap-1.5 bg-white text-black transition';
-                btnFlip.className = 'px-3.5 py-1.5 rounded-full text-xs sm:text-sm font-bold flex items-center gap-1.5 text-zinc-300 hover:text-white transition';
+                document.getElementById('duoPanel').style.display = 'flex';
+                document.getElementById('flipPanel').style.display = 'none';
             } else {
-                viewDuo.classList.add('hidden');
-                viewDuo.classList.remove('flex');
-                viewFlip.classList.remove('hidden');
-                viewFlip.classList.add('flex');
-
-                btnFlip.className = 'px-3.5 py-1.5 rounded-full text-xs sm:text-sm font-bold flex items-center gap-1.5 bg-white text-black transition';
-                btnDuo.className = 'px-3.5 py-1.5 rounded-full text-xs sm:text-sm font-bold flex items-center gap-1.5 text-zinc-300 hover:text-white transition';
-            }
-            resetAutoHideControls();
-        }
-
-        function toggleNightMode(event) {
-            if (event) event.stopPropagation();
-            isNightMode = !isNightMode;
-            document.body.classList.toggle('night-mode', isNightMode);
-
-            const btnNight = document.getElementById('btn-night');
-            if (isNightMode) {
-                btnNight.classList.add('bg-red-950/80', 'text-red-400', 'border', 'border-red-500/40');
-            } else {
-                btnNight.classList.remove('bg-red-950/80', 'text-red-400', 'border', 'border-red-500/40');
-            }
-            resetAutoHideControls();
-        }
-
-        function toggleFlexMode(event) {
-            if (event) event.stopPropagation();
-            isFlexMode = !isFlexMode;
-            document.body.classList.toggle('flex-mode', isFlexMode);
-
-            const btnFlex = document.getElementById('btn-flex');
-            if (isFlexMode) {
-                btnFlex.classList.add('bg-orange-500/20', 'text-orange-400', 'border', 'border-orange-500/40');
-            } else {
-                btnFlex.classList.remove('bg-orange-500/20', 'text-orange-400', 'border', 'border-orange-500/40');
-            }
-            resetAutoHideControls();
-        }
-
-        function toggle24Hour(event) {
-            if (event) event.stopPropagation();
-            is24Hour = !is24Hour;
-            document.getElementById('btn-24h').textContent = is24Hour ? '24H' : '12H';
-            lastFlipHour = ''; // 즉시 다시 렌더링하도록 초기화
-            resetAutoHideControls();
-        }
-
-        function toggleFullScreen(event) {
-            if (event) event.stopPropagation();
-            if (!document.fullscreenElement) {
-                document.documentElement.requestFullscreen().catch(() => {});
-            } else {
-                if (document.exitFullscreen) {
-                    document.exitFullscreen().catch(() => {});
-                }
-            }
-            resetAutoHideControls();
-        }
-
-        function openGuideModal(event) {
-            if (event) event.stopPropagation();
-            const modal = document.getElementById('guide-modal');
-            modal.classList.remove('hidden');
-            modal.classList.add('flex');
-        }
-
-        function closeGuideModal(event) {
-            if (event) event.stopPropagation();
-            const modal = document.getElementById('guide-modal');
-            modal.classList.add('hidden');
-            modal.classList.remove('flex');
-            resetAutoHideControls();
-        }
-
-        // --- 5. 상단/하단 컨트롤 바 자동 숨김 처리 ---
-        function showControls() {
-            document.getElementById('top-controls').classList.remove('ui-hidden');
-            document.getElementById('bottom-status').classList.remove('ui-hidden-bottom');
-        }
-
-        function hideControls() {
-            document.getElementById('top-controls').classList.add('ui-hidden');
-            document.getElementById('bottom-status').classList.add('ui-hidden-bottom');
-        }
-
-        function resetAutoHideControls() {
-            showControls();
-            clearTimeout(hideControlsTimeout);
-            hideControlsTimeout = setTimeout(() => {
-                hideControls();
-            }, 3500);
-        }
-
-        // 화면 터치 시 컨트롤 표시/숨김 토글
-        document.body.addEventListener('click', () => {
-            const topBar = document.getElementById('top-controls');
-            if (topBar.classList.contains('ui-hidden')) {
-                resetAutoHideControls();
-            } else {
-                hideControls();
-                clearTimeout(hideControlsTimeout);
-            }
-            requestWakeLock();
-        });
-
-        // --- 6. 좌우 스와이프 제스처로 모드 전환 ---
-        let touchStartX = 0;
-        let touchEndX = 0;
-
-        document.body.addEventListener('touchstart', (e) => {
-            touchStartX = e.changedTouches[0].screenX;
-        }, { passive: true });
-
-        document.body.addEventListener('touchend', (e) => {
-            touchEndX = e.changedTouches[0].screenX;
-            const deltaX = touchEndX - touchStartX;
-            if (Math.abs(deltaX) > 65) {
-                const nextMode = currentMode === 'duo' ? 'flip' : 'duo';
-                setClockMode(nextMode);
-            }
-        }, { passive: true });
-
-        // --- 7. 화면 꺼짐 방지 (Screen Wake Lock API) ---
-        async function requestWakeLock() {
-            const dot = document.getElementById('wakelock-dot');
-            const text = document.getElementById('wakelock-text');
-            if ('wakeLock' in navigator) {
-                try {
-                    if (!wakeLockSentinel) {
-                        wakeLockSentinel = await navigator.wakeLock.request('screen');
-                        dot.className = 'w-2 h-2 rounded-full bg-emerald-400';
-                        text.textContent = '화면 켜짐 유지 중';
-                        wakeLockSentinel.addEventListener('release', () => {
-                            wakeLockSentinel = null;
-                        });
-                    }
-                } catch (err) {
-                    dot.className = 'w-2 h-2 rounded-full bg-amber-400';
-                    text.textContent = '절전 방지 대기 (화면을 터치하세요)';
-                }
-            } else {
-                dot.className = 'w-2 h-2 rounded-full bg-zinc-500';
-                text.textContent = '기본 화면 유지 모드';
+                document.getElementById('duoPanel').style.display = 'none';
+                document.getElementById('flipPanel').style.display = 'flex';
             }
         }
 
-        document.addEventListener('visibilitychange', () => {
-            if (document.visibilityState === 'visible') {
-                requestWakeLock();
-            }
-        });
+        // 야간 모드 토글
+        function toggleNightMode() {
+            document.body.classList.toggle('night-mode');
+        }
 
-        // --- 8. OLED 번인(Burn-in) 방지 픽셀 시프트 ---
-        setInterval(() => {
-            const wrapper = document.getElementById('app-wrapper');
-            const offsetX = Math.floor(Math.random() * 11) - 5; // -5px ~ +5px
-            const offsetY = Math.floor(Math.random() * 11) - 5;
-            wrapper.style.transform = `translate(${offsetX}px, ${offsetY}px)`;
-        }, 60000);
-
-        // --- 초기화 실행 ---
-        window.onload = function () {
-            buildAnalogClockFace();
-            requestAnimationFrame(updateClock);
-            resetAutoHideControls();
-            requestWakeLock();
-        };
+        setInterval(updateClock, 1000);
+        updateClock();
+        generateCalendar();
     </script>
 </body>
 </html>
